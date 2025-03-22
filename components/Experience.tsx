@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
+// @ts-ignore
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import * as THREE from "three";
 import { Center, Environment, Loader, OrbitControls } from "@react-three/drei";
