@@ -2,7 +2,6 @@
 import Scene from "@/components/Experience";
 import Image from "next/image";
 import { useState } from "react";
-import { fileURLToPath } from "url";
 
 interface ThingiverseThing {
     id: number;
@@ -16,9 +15,10 @@ export default function Homepage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [things, setThings] = useState<ThingiverseThing[]>([]);
+    const [image, setImage] = useState<File | null>(null);
 
     const search = async () => {
-        if (searchTerm == "") return;
+        if (searchTerm === "") return;
         setLoading(true);
         const token = "19adfc934c6d3f95ef2307781360e60b";
 
@@ -40,9 +40,7 @@ export default function Homepage() {
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const filesBody = await filesResponse.json();
-
-                    console.log(filesBody);
-                    const model_url = filesBody[0].direct_url
+                    const model_url = filesBody[0]?.direct_url || "";
 
                     return {
                         id: thing.id,
@@ -62,39 +60,53 @@ export default function Homepage() {
     };
 
     return (
-        <div className="bg-background text-foreground flex h-screen w-screen flex-col items-center overflow-x-hidden p-10">
+        <div className="bg-background text-foreground flex h-screen w-screen flex-col items-center p-10">
             <div className="mb-5 text-5xl font-semibold">Mini Morph</div>
-            <div className="w-xl mb-5 flex max-w-2xl items-center justify-center gap-2 mb-8">
-                <input
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    type="text"
-                    className="rounded-lg p-2 outline-2 outline-gray-200 focus:outline-blue-200 w-md"
-                    required
-                />
-                <button 
-                    onClick={search} 
-                    className="bg-foreground text-background rounded-full p-2 text-lg hover:shadow-md hover:bg-gray-800 transition-colors"
-                    disabled={loading}
-                >
-                    {
-                        loading ?  
-                            <Image src={"/loader.svg"} width={24} height={24} alt="search" className="animate-spin" /> 
-                            :
-                            <Image src={"/search.svg"} width={24} height={24} alt="search" /> 
-                    }
-                </button>
+            <div className="w-xl max-w-2xl flex flex-col gap-4 items-center">
+                <div className="flex w-full gap-2">
+                    <input
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        type="text"
+                        placeholder="Search for a model..."
+                        className="flex-1 rounded-lg p-3 outline-none border border-gray-300 focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                        onClick={search}
+                        className="bg-foreground text-background rounded-2xl p-3 hover:bg-gray-800 transition-colors"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <Image src="/loader.svg" width={24} height={24} alt="loading" className="animate-spin" />
+                        ) : (
+                            <Image src="/search.svg" width={24} height={24} alt="search" />
+                        )}
+                    </button>
+                </div>
+                <div className="text-gray-400">or</div>
+                <div className="flex items-center gap-4">
+                    <label className="cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg px-4 py-2">
+                        Upload Image
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => setImage(e.target.files?.[0] || null)}
+                        />
+                    </label>
+                    {image && <span className="text-gray-600">{image.name}</span>}
+                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 w-full h-full">
+            <div className="grid grid-cols-2 gap-8 w-full h-full mt-8">
                 {things.map((thing) => (
-                    <div key={thing.id} className="flex rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md">
+                    <div key={thing.id} className="flex rounded-lg border border-gray-200 p-4 shadow-md">
                         <div className="flex flex-col gap-2">
                             <img
                                 src={thing.preview_image}
                                 alt={thing.name}
                                 className="h-40 w-full rounded-md object-cover"
                             />
-                            <div className="mt-2 text-center font-medium">{thing.name}</div>
+                            <div className="mt-2 text-center font-medium text-lg">{thing.name}</div>
                         </div>
                         <Scene url={thing.model_url} />
                     </div>
@@ -103,4 +115,3 @@ export default function Homepage() {
         </div>
     );
 }
-
