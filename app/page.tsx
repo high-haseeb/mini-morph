@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SearchBar } from "@/components/SearchBar";
+import { Toaster } from "@/components/Toaster";
 
 export default function Homepage() {
     return (
@@ -13,6 +14,7 @@ export default function Homepage() {
                 </p>
             </div>
             <SearchBar />
+            <Toaster />
             <Footer />
         </div>
     );

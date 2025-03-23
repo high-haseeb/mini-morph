@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { ChangeEventHandler, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Scene from "./Experience";
+import { toast } from "sonner";
 
 interface ThingiverseThing {
     id: number;
@@ -60,6 +61,53 @@ export const SearchBar = () => {
             setLoading(false);
         }
     };
+    const fileUplaodRef = useRef<HTMLInputElement>(null);
+    const MESHY_API_TOKEN = "msy_ugdSLdUsBVawERT1as9xs5PpectrdGYDGzmF";
+    const handleFileUpload: ChangeEventHandler<HTMLInputElement> = async (e) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+
+        const file = e.target.files[0];
+        if (!file.type.includes("image")) {
+            toast("Please upload an image!");
+            return;
+        }
+
+        try {
+            const toBase64 = (file: File) =>
+                new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+
+            const base64Image = await toBase64(file);
+
+            const response = await fetch("https://api.meshy.ai/openapi/v1/image-to-3d", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${MESHY_API_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    image_url: base64Image,
+                    enable_pbr: true,
+                    should_remesh: true,
+                    should_texture: true,
+                }),
+            });
+
+            const data = await response.json();
+            console.log("3D Model Response:", data);
+            toast.success(`<pre>${response.body}</pre>`);
+
+        } catch (error) {
+            console.error("Upload failed:", error);
+            toast.error("Failed to generate 3D model.");
+        }
+    };
+
+
 
     return (
         <>
@@ -99,7 +147,7 @@ export const SearchBar = () => {
                             />
                             <button
                                 onClick={() => search(1)}
-                                className="bg-foreground text-background rounded-2xl p-3 transition-colors hover:bg-gray-800"
+                                className="bg-foreground text-background rounded-2xl p-3 transition-colors hover:bg-foreground/80"
                                 disabled={loading}
                             >
                                 {loading ? (
@@ -107,6 +155,13 @@ export const SearchBar = () => {
                                 ) : (
                                         <Image src="/search.svg" width={24} height={24} alt="search" />
                                     )}
+                            </button>
+                            <button
+                                className="bg-foreground text-background rounded-2xl p-3 transition-colors hover:bg-foreground/80"
+                                onClick={() => fileUplaodRef.current?.click()}
+                            >
+                                <Image src={"/upload.svg"} width={24} height={24} alt="upload image" />
+                                <input type="file" hidden ref={fileUplaodRef} onChange={handleFileUpload} />
                             </button>
                         </div>
                     </div>
