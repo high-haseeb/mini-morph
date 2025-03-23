@@ -3,17 +3,13 @@ import { Canvas, useLoader } from "@react-three/fiber";
 // @ts-ignore
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import { Center, Environment, OrbitControls, useProgress, Html, useGLTF } from "@react-three/drei";
-import * as THREE from "three";
 import Image from "next/image";
 
-
 const Model = ({ url }: { url: string }) => {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} scale={1} />;
+    const { scene } = useGLTF(url);
+    return <primitive object={scene} scale={1} />;
 };
-/**
- * Main Scene component with lighting and camera setup.
- */
+
 export default function Scene({ url, meshyModel = false }: { url: string | null, meshyModel ?: boolean  }) {
     return (
         <div className="relative w-full h-full">
@@ -34,9 +30,6 @@ export default function Scene({ url, meshyModel = false }: { url: string | null,
     );
 }
 
-/**
- * Loader Overlay using useProgress from drei
- */
 function LoaderOverlay() {
     const { progress } = useProgress();
     return (
@@ -49,9 +42,6 @@ function LoaderOverlay() {
     );
 }
 
-/**
- * Loads and renders an STL model from a given URL.
- */
 function STLModel({ url }: { url: string }) {
     const geometry = useLoader(STLLoader, url);
 

@@ -21,16 +21,9 @@ export const SearchBar = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    const token = "19adfc934c6d3f95ef2307781360e60b";
     const getThingFiles = async () => {
-        const response = await fetch(`https://api.thingiverse.com/things/${activeThingID}/files`, 
-            {
-                method: "GET",
-                headers: { Authorization: `Bearer ${token}` },
-            }
-        );
+        const response = await fetch(`/api/thingiverse/files/${activeThingID}`);
         const body = await response.json();
-        console.log(body);
         setActiveThingFiles(body);
     }
 
@@ -43,18 +36,13 @@ export const SearchBar = () => {
         setLoading(true);
 
         try {
-            const response = await fetch(
-                `https://api.thingiverse.com/search/${encodeURIComponent(searchTerm)}/?type=things&page=${newPage}&per_page=4`,
-                {
-                    method: "GET",
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
+            const response = await fetch(`/api/thingiverse/${searchTerm}/?page=${newPage}`);
             const body = await response.json();
-            console.log(body);
-            setThings(body.hits);
-            setTotalPages(Math.ceil(body.total / 4));
-            setPage(newPage);
+            if (body.hits) {
+                setThings(body.hits);
+                setTotalPages(Math.ceil(body.total / 4));
+                setPage(newPage);
+            }
         } catch (e) {
             console.log(e);
         } finally {
@@ -66,6 +54,7 @@ export const SearchBar = () => {
     const fileUplaodRef = useRef<HTMLInputElement>(null);
     const [meshModelUrl, setMeshyModelUrl] = useState<string | null>(null);
     const MESHY_API_TOKEN = "msy_ugdSLdUsBVawERT1as9xs5PpectrdGYDGzmF";
+
     const handleFileUpload: ChangeEventHandler<HTMLInputElement> = async (e) => {
         if (!e.target.files || e.target.files.length === 0) return;
         setLoading(true);
@@ -87,12 +76,9 @@ export const SearchBar = () => {
 
             const base64Image = await toBase64(file);
 
-            const response = await fetch("https://api.meshy.ai/openapi/v1/image-to-3d", {
+            const response = await fetch("/api/meshy/start/", {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${MESHY_API_TOKEN}`,
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     image_url: base64Image,
                     enable_pbr: true,
@@ -106,8 +92,7 @@ export const SearchBar = () => {
             setTaskID(data.result);
             pollForModelUrl(data.result);
 
-            toast.success(`<pre>${response.body}</pre>`);
-
+            toast.success(`3D Model Created!`);
         } catch (error) {
             console.error("Upload failed:", error);
             toast.error("Failed to generate 3D model.");
@@ -120,17 +105,11 @@ export const SearchBar = () => {
         let status = "IN_PROGRESS";
         const delay = 5000;
 
-        while (status = "IN_PROGRESS") {
+        while (status === "IN_PROGRESS") {
             try {
-                const response = await fetch(`https://api.meshy.ai/openapi/v1/image-to-3d/${taskId}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${MESHY_API_TOKEN}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-
+                const response = await fetch(`/api/meshy/status?taskId=${taskId}`);
                 const data = await response.json();
+
                 console.log("Model Status:", data);
                 status = data.status;
 
@@ -207,8 +186,6 @@ export const SearchBar = () => {
                             </button>
                         </div>
                     </div>
-
-
                     {loading ? (
                         <div className="mb-auto mt-8 grid h-max w-full grid-cols-4 gap-4">
                             {Array.from({ length: 4 }).map((_, index) => (
@@ -244,7 +221,7 @@ export const SearchBar = () => {
                                 )
                             : (
                                 <div className="flex flex-grow w-full items-center justify-center p-4">
-                                    { meshModelUrl ? <Scene url={meshModelUrl} meshyModel /> : <div className="bg-white w-full h-full rounded-md animate-pulse"></div> }
+                                    { meshModelUrl ? <Scene url={"https://assets.meshy.ai/c7c3b833-15b4-4020-8076-7fc2aa5d3f98/tasks/0195c3de-4fd9-7c6e-9ddc-092c2e00fb70/output/model.glb?Expires=1743007294&Signature=LYsVCb5zLQy8cR~Ql2g3fpMTRdNKsQjuUgHfXkurqdOjy-Q0Xr06W8iV6GCDxcHIZE63PCFPyaAGglQTIqtgyttSAGKlpScFwCKT2fRv1I406qCypNmbHa3GWJDLjCxSlh7NDMzy6e7FKxn-T2Ocs54GxOdgY7iHMUt7GLSELPuFOIcn9ZTle4ybC38kKMpsd2oy2nXDAKDHJTVm5VZLP-De1~Hvk~l792voLyqWEV0U0Lb2g0prMDYxRFvw3C966v9~sC8EbwsNb285TgbplT~AirqdMmkjIEdwqcv5IHQz2VWBq52jdX0b2v0XthQEtHD~mM0sNl3N6kVScSJPog__&Key-Pair-Id=KL5I0C8H7HX83"} meshyModel /> : <div className="bg-white w-full h-full rounded-md animate-pulse"></div> }
                                 </div>
                             )
                     }
