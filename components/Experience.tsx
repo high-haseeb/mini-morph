@@ -16,13 +16,11 @@ export default function Scene({ url }: { url: string | null }) {
                 <ambientLight intensity={0.8} />
                 <directionalLight position={[10, 30, 10]} intensity={1.5} />
                 <Environment preset="city" />
-                <Center>
-                    {url && (
-                        <Suspense fallback={<LoaderOverlay />}>
-                            <STLModel url={url} />
-                        </Suspense>
-                    )}
-                </Center>
+                <Suspense fallback={<LoaderOverlay />}>
+                    <Center>
+                        {url && <STLModel url={url} /> }
+                    </Center>
+                </Suspense>
                 <OrbitControls />
             </Canvas>
         </div>
