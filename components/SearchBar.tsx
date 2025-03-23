@@ -61,10 +61,14 @@ export const SearchBar = () => {
             setLoading(false);
         }
     };
+
+    const [taskId, setTaskID] = useState<string | null>(null);
     const fileUplaodRef = useRef<HTMLInputElement>(null);
+    const [meshModelUrl, setMeshyModelUrl] = useState<string | null>(null);
     const MESHY_API_TOKEN = "msy_ugdSLdUsBVawERT1as9xs5PpectrdGYDGzmF";
     const handleFileUpload: ChangeEventHandler<HTMLInputElement> = async (e) => {
         if (!e.target.files || e.target.files.length === 0) return;
+        setLoading(true);
 
         const file = e.target.files[0];
         if (!file.type.includes("image")) {
@@ -98,16 +102,54 @@ export const SearchBar = () => {
             });
 
             const data = await response.json();
-            console.log("3D Model Response:", data);
+            console.log("3D Model Response:", data.result);
+            setTaskID(data.result);
+            pollForModelUrl(data.result);
+
             toast.success(`<pre>${response.body}</pre>`);
 
         } catch (error) {
             console.error("Upload failed:", error);
             toast.error("Failed to generate 3D model.");
+        } finally {
+            setLoading(false);
         }
     };
 
+    const pollForModelUrl = async (taskId: string) => {
+        let status = "IN_PROGRESS";
+        const delay = 5000;
 
+        while (status = "IN_PROGRESS") {
+            try {
+                const response = await fetch(`https://api.meshy.ai/openapi/v1/image-to-3d/${taskId}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${MESHY_API_TOKEN}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                const data = await response.json();
+                console.log("Model Status:", data);
+                status = data.status;
+
+                if (data.status === "SUCCEEDED" && data.model_url) {
+                    setMeshyModelUrl(data.model_url);
+                    toast.success("3D model is ready!");
+                    return;
+                } else if (data.status === "FAILED") {
+                    toast.error("3D model generation failed.");
+                    return;
+                }
+            } catch (error) {
+                console.error("Error checking model status:", error);
+            }
+            await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+
+        toast.error("3D model generation took too long.");
+    };
 
     return (
         <>
@@ -176,29 +218,36 @@ export const SearchBar = () => {
                                 </div>
                             ))}
                         </div>
-                    ) : things.length > 0 ? (
-                            <div className="mb-auto mt-8 grid h-max w-full grid-cols-4 gap-4">
-                                {things.map((thing) => (
-                                    <div 
-                                        key={thing.id}
-                                        className="border-foreground/30 hover:bg-foreground/10 flex flex-col rounded-xl border p-4 shadow-md"
-                                        onClick={() => {
-                                            setActiveThingID(thing.id) 
-                                            setActiveThing(thing);
-                                        }}
-                                    >
-                                        <img
-                                            src={thing.preview_image}
-                                            alt={thing.name}
-                                            className="h-80 w-full rounded-md object-cover"
-                                        />
-                                        <div className="mt-2 text-left text-xl font-medium">{thing.name}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                                <div className="flex h-full w-full items-center justify-center">search for anything...</div>
-                            )}
+                    ) : taskId === null ?
+                            things.length > 0 ? (
+                                <div className="mb-auto mt-8 grid h-max w-full grid-cols-4 gap-4">
+                                    {things.map((thing) => (
+                                        <div 
+                                            key={thing.id}
+                                            className="border-foreground/30 hover:bg-foreground/10 flex flex-col rounded-xl border p-4 shadow-md"
+                                            onClick={() => {
+                                                setActiveThingID(thing.id) 
+                                                setActiveThing(thing);
+                                            }}
+                                        >
+                                            <img
+                                                src={thing.preview_image}
+                                                alt={thing.name}
+                                                className="h-80 w-full rounded-md object-cover"
+                                            />
+                                            <div className="mt-2 text-left text-xl font-medium">{thing.name}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                    <div className="flex h-full w-full items-center justify-center">search for anything...</div>
+                                )
+                            : (
+                                <div className="flex flex-grow w-full items-center justify-center p-4">
+                                    { meshModelUrl ? <Scene url={meshModelUrl} meshyModel /> : <div className="bg-white w-full h-full rounded-md animate-pulse"></div> }
+                                </div>
+                            )
+                    }
 
                     {things.length > 0 && (
                         <button

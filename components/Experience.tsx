@@ -2,14 +2,19 @@ import { Suspense } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
 // @ts-ignore
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
-import { Center, Environment, OrbitControls, useProgress, Html } from "@react-three/drei";
+import { Center, Environment, OrbitControls, useProgress, Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
 
+
+const Model = ({ url }: { url: string }) => {
+  const { scene } = useGLTF(url);
+  return <primitive object={scene} scale={1} />;
+};
 /**
  * Main Scene component with lighting and camera setup.
  */
-export default function Scene({ url }: { url: string | null }) {
+export default function Scene({ url, meshyModel = false }: { url: string | null, meshyModel ?: boolean  }) {
     return (
         <div className="relative w-full h-full">
             <Canvas className="w-full h-full bg-white rounded-md">
@@ -18,7 +23,9 @@ export default function Scene({ url }: { url: string | null }) {
                 <Environment preset="city" />
                 <Suspense fallback={<LoaderOverlay />}>
                     <Center>
-                        {url && <STLModel url={url} /> }
+                        {
+                            url && meshyModel ? <Model url={url} /> : url && <STLModel url={url} />
+                        }
                     </Center>
                 </Suspense>
                 <OrbitControls />
