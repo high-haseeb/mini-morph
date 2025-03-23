@@ -9,22 +9,6 @@ interface ThingiverseThing {
     preview_image: string;
 }
 
-//date : "2016-12-24 09:10:43" default_image : 
-//{id: 5056713, url: 'https://cdn.thingiverse.com/assets/63/c7/62/b5/78/bottom.stl', name: 'b5af475b11f87bee06fa4ff661f0f998.png', sizes: Array(15), added: '2016-12-24T09:11:28+00:00'} direct_url : "https://cdn.thingiverse.com/assets/63/c7/62/b5/78/bottom.stl" download_count : 
-//12158
-//download_url : "https://api.thingiverse.com/files/3117621/download" formatted_size : 
-//"71 kb" id
-//: 
-//3117621 meta_data
-//: [] name : 
-//"bottom.stl" public_url
-//: "https://www.thingiverse.com/download:3117621" size
-//: 
-//73584 threejs_url : "https://cdn.thingiverse.com/threejs_json/cf/79/ee/8d/07/b5af475b11f87bee06fa4ff661f0f998.js"
-//thumbnail
-//: "https://cdn.thingiverse.com/renders/b3/b6/8f/b7/0e/b5af475b11f87bee06fa4ff661f0f998_thumb_medium.jpg" url
-//: "https://api.thingiverse.com/files/3117621"
-
 export const SearchBar = () => {
     const [activeThingID, setActiveThingID] = useState<number | null>();
     const [activeThingFileIndex, setActiveThingFileIndex] = useState<number>(0);
@@ -162,37 +146,12 @@ export const SearchBar = () => {
                             )}
 
                     {things.length > 0 && (
-                        <div className="mt-auto flex items-center gap-2">
-                            <button 
-                                className="cursor-pointer font-semibold disabled:opacity-50" 
-                                onClick={() => search(page - 1)} 
-                                disabled={page === 1}
-                            >
-                                Previous
-                            </button>
-                            <div className="mx-2 flex gap-2">
-                                {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
-                                    const pageNumber = Math.max(1, Math.min(page + i, totalPages));
-                                    return (
-                                        <button
-                                            key={pageNumber}
-                                            onClick={() => search(pageNumber)}
-                                            className={`cursor-pointer rounded-md px-3 py-1 ${page === pageNumber ? 'ring-foreground/50 ring' : ''}`}
-                                        >
-                                            {pageNumber}
-                                        </button>
-                                    );
-                                })}
-                                ...
-                            </div>
-                            <button 
-                                className="cursor-pointer font-semibold disabled:opacity-50" 
-                                onClick={() => search(page + 1)} 
-                                disabled={page === totalPages}
-                            >
-                                Next
-                            </button>
-                        </div>
+                        <button
+                            className="text-background bg-foreground rounded-md px-3 py-1 flex gap-2 items-center justify-center cursor-pointer" 
+                            onClick={() => search(page + 1 > totalPages ? 1 : page + 1)}>
+                            <Image src={"wand.svg"} width={24} height={24} alt="reimagine" />
+                            <div className="text-lg">reimagine</div>
+                        </button>
                     )}
                 </div>
             </div>
